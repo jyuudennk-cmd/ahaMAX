@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ahamo→MAXのりかえ割 提案マスター</title>
+    
+    <style>
+        :root { 
+            --ahamo-purple: #6A1B9A; /* ahamoパープル */
+            --max-red: #D32F2F; /* MAXレッド */
+            --secondary: #F3E5F5; /* 薄いパープル */
+            --text: #212121; 
+            --card-bg: #ffffff;
+        }
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background: var(--secondary); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; -webkit-user-select: none; color: var(--text); }
+        
+        header { 
+            background: linear-gradient(135deg, var(--ahamo-purple) 0%, var(--max-red) 100%); 
+            color: white; width: 100%; text-align: center; padding: 16px 0; 
+            box-shadow: 0 4px 12px rgba(106, 27, 154, 0.4); 
+            position: sticky; top: 0; z-index: 100; 
+            border-bottom: 2px solid #fff;
+        }
+        h1 { margin: 0; font-size: 1.15rem; letter-spacing: 0.05em; font-weight: bold; }
+        .update-info { font-size: 0.75rem; color: #E1BEE7; margin-top: 4px; font-weight: bold; }
+        
+        .progress-container { width: 100%; background: #E1BEE7; height: 6px; }
+        #progress-bar { background: var(--max-red); width: 0%; height: 100%; transition: 0.4s ease-out; }
+
+        .stat-area { font-size: 0.8rem; margin-top: 15px; opacity: 0.8; color: var(--ahamo-purple); font-weight: bold; letter-spacing: 0.05em; }
+
+        .container { width: 90%; max-width: 400px; margin-top: 25px; perspective: 1000px; }
+        .card { width: 100%; height: 350px; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; box-sizing: border-box; border-radius: 16px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); background: var(--card-bg); color: var(--text); border: 1px solid #E1BEE7; }
+        
+        .card-front { border-top: 6px solid var(--ahamo-purple); }
+        .card-back { transform: rotateY(180deg); background: #fffcfcfc; border: 3px solid var(--max-red); }
+        
+        .cat-badge { position: absolute; top: 15px; left: 15px; background: linear-gradient(90deg, var(--ahamo-purple), var(--max-red)); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; color: white; font-weight: bold; letter-spacing: 0.05em; }
+        .question { font-size: 1.2rem; font-weight: bold; line-height: 1.5; text-align: center; color: var(--text); }
+        .answer { font-size: 1.1rem; line-height: 1.6; text-align: left; width: 100%; color: var(--text); }
+        .answer strong { color: var(--max-red); border-bottom: 2px solid rgba(211, 47, 47, 0.2); }
+        
+        .tap-hint { margin-top: 25px; color: #9C27B0; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: bold;}
+
+        .controls { margin-top: 30px; display: flex; gap: 15px; width: 90%; max-width: 400px; }
+        button { flex: 1; padding: 16px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        button:active { transform: scale(0.96); }
+        .btn-check { background: var(--ahamo-purple); color: white; }
+        .btn-next { background: #E0E0E0; color: #333; }
+        
+        .btn-reset { margin-top: 25px; background: transparent; color: #7B1FA2; text-decoration: underline; font-size: 0.75rem; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>ahamo→MAXのりかえ割 マスター</h1>
+    <div class="update-info">アップセル獲得 徹底強化ツール</div>
+</header>
+<div class="progress-container"><div id="progress-bar"></div></div>
+<div class="stat-area" id="stat-text">Ready...</div>
+
+<div class="container">
+    <div class="card" id="card" onclick="this.classList.toggle('is-flipped')">
+        <div class="card-face card-front">
+            <span class="cat-badge" id="cat-display">-</span>
+            <div class="question" id="q-display">タップして開始</div>
+            <div class="tap-hint">Tap to Flip</div>
+        </div>
+        <div class="card-face card-back">
+            <div class="answer" id="a-display">---</div>
+            <div class="tap-hint" style="color:var(--max-red)">Back</div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <button class="btn-check" onclick="markAsLearned()">覚えた</button>
+    <button class="btn-next" onclick="nextCard()">次へ</button>
+</div>
+
+<button class="btn-reset" onclick="resetProgress()">進捗リセット</button>
+
+<script>
+    const allData = [
+        // ■キャンペーン概要
+        { cat: "概要", q: "「ahamo→MAXのりかえ割」の最大の特典内容は？", a: "MAXの月額料金から、<strong>毎月2,200円（税込）が12ヶ月間割引</strong>されます。" },
+        { cat: "条件", q: "この割引を適用するための必須条件は？", a: "①現在<strong>ahamo</strong>を契約していること<br>②<strong>「ドコモ MAX」</strong>へプラン変更すること" },
+        { cat: "条件", q: "「昨日ahamoにしたばかり」のお客様でも対象になる？", a: "<strong>対象外</strong>です。ahamoを<strong>6ヶ月以上</strong>契約しているお客様が対象となります。" },
+        { cat: "適用", q: "割引はいつから適用される？", a: "プラン変更を行った<strong>翌月の利用分</strong>から12ヶ月間適用されます。" },
+        { cat: "手数料", q: "店頭でahamoからMAXへ変更する場合、3,850円の事務手数料はかかる？", a: "当キャンペーンの適用により、<strong>事務手数料は無料</strong>（または同額還元）となります。" },
+
+        // ■他割引との併用
+        { cat: "併用", q: "「みんなドコモ割」や「ドコモ光セット割」とは併用できる？", a: "<strong>併用可能</strong>です。各種セット割を引いた金額から、さらに2,200円が引かれます。" },
+        { cat: "併用", q: "「dカードお支払割」は適用される？", a: "<strong>適用されます。</strong>ahamo時代は無かったdカード割（-187円）が復活するため、さらにお得になります。" },
+        { cat: "解約", q: "割引期間中（例：半年後）に、MAXからminiへ変更したら割引はどうなる？", a: "プラン変更した月の利用分をもって<strong>割引は終了（消滅）</strong>します。" },
+
+        // ■ターゲットと提案トーク
+        { cat: "ターゲット", q: "このキャンペーンを真っ先に提案すべき「ターゲット層」は？", a: "ahamoで<strong>「大盛りオプション」</strong>をつけている人、または<strong>毎月データ追加（1GB/550円）</strong>をしている人です。" },
+        { cat: "トーク", q: "「ahamo大盛り（100GB）」を利用中のお客様へのキラーフレーズは？", a: "「今の料金から<strong>ほとんど変わらず（または安く）</strong>、完全無制限のMAXにできます！」" },
+        { cat: "トーク", q: "「ahamoのままで十分」というお客様への切り返しは？", a: "「MAXになれば、<strong>店頭での手厚い操作サポートが無料</strong>で受けられるようになります。最初の1年は同額なのでぜひ！」" },
+        { cat: "家族", q: "家族にドコモユーザーがいる場合のメリットは？", a: "ahamoは「みんなドコモ割」の割引対象外でしたが、MAXになれば対象となり、<strong>ご自身の料金がさらに下がります。</strong>" },
+        { cat: "通信", q: "「ahamoとMAXで通信速度は違うの？」と聞かれたら？", a: "「どちらも高品質なドコモ回線ですが、MAXは混雑時でも<strong>優先的に通信が繋がりやすい</strong>設計になっています」と伝えます。" },
+        
+        // ■注意点・コンプライアンス
+        { cat: "注意点", q: "割引終了後（13ヶ月目以降）の案内で、クレームを防ぐために必ず伝えるべきことは？", a: "「1年経過後は割引が終了し、<strong>通常のMAXの料金に戻る（上がる）</strong>」という事実を、必ず強調して説明します。" },
+        { cat: "注意点", q: "「1年後にまたahamoに戻していいの？」と聞かれたら？", a: "「はい、<strong>違約金なしでいつでも戻せます。</strong>まずは1年間、無制限の快適さを体験してみてください」と案内します。" },
+        { cat: "dカード", q: "ahamo×dカードGOLD特典の「+5GB増量（ボーナスパケット）」はどうなる？", a: "MAXは元々が無制限なので、ボーナスパケットの概念は無くなります。代わりに毎月の10%還元が強力になります。" },
+        { cat: "手続き", q: "ALADIN（システム）で手続きする際、割引は自動適用される？", a: "システムによる自動判定ですが、適用条件（ahamo期間6ヶ月以上等）を満たしているか、<strong>確認画面で必ず目視チェック</strong>してください。" },
+
+        // ■クロージング
+        { cat: "クロージング", q: "スマホの買い替えを検討しているahamoユーザーへの提案順序は？", a: "まず<strong>「のりかえ割で料金が上がらずMAXにできる」</strong>ことを伝え、その上でカエドキプログラム等を使って最新機種を提案します。" },
+        { cat: "店舗メリット", q: "結論、スタッフがこのキャンペーンを獲得する最大の意義は？", a: "お客様の満足度を保ったまま、店舗の<strong>「MAX純増（高額プラン獲得）」の目標を劇的に進捗させる</strong>最強の武器だからです。" },
+        { cat: "マインド", q: "提案する際、スタッフが持つべきマインドは？", a: "「高いプランを売りつける」のではなく、<strong>「今だけの特別な権利を使って、お客様のスマホ環境を最高ランクに引き上げる」</strong>という自信を持つことです。" }
+    ];
+
+    const STORAGE_KEY = 'ahamoToMax_v1';
+
+    let learnedIndexes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    let currentIndex = 0;
+
+    function updateDisplay() {
+        const remaining = allData.filter((_, i) => !learnedIndexes.includes(i));
+        const progress = (learnedIndexes.length / allData.length) * 100;
+        
+        document.getElementById('progress-bar').style.width = progress + '%';
+        document.getElementById('stat-text').textContent = `習得済み: ${learnedIndexes.length} / 全${allData.length}問`;
+
+        if (remaining.length === 0) {
+            document.getElementById('cat-display').textContent = "MASTER";
+            document.getElementById('q-display').innerHTML = "アップセルの極意を<br>完全習得しました！";
+            document.getElementById('a-display').innerHTML = "この強力なキャンペーンを武器に、<br>MAXの獲得件数を量産してください！<br>（※13ヶ月目以降の説明だけはお忘れなく）";
+            document.getElementById('card').classList.remove('is-flipped');
+            return;
+        }
+
+        while (learnedIndexes.includes(currentIndex)) {
+            currentIndex = (currentIndex + 1) % allData.length;
+        }
+
+        const data = allData[currentIndex];
+        document.getElementById('cat-display').textContent = data.cat;
+        document.getElementById('q-display').innerHTML = data.q;
+        document.getElementById('a-display').innerHTML = data.a;
+        document.getElementById('card').classList.remove('is-flipped');
+    }
+
+    function markAsLearned() {
+        if (!learnedIndexes.includes(currentIndex)) {
+            learnedIndexes.push(currentIndex);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(learnedIndexes));
+            nextCard();
+        }
+    }
+
+    function nextCard() {
+        currentIndex = (currentIndex + 1) % allData.length;
+        updateDisplay();
+    }
+
+    function resetProgress() {
+        if (confirm('進捗をリセットして最初から学習しますか？')) {
+            learnedIndexes = [];
+            localStorage.removeItem(STORAGE_KEY);
+            currentIndex = 0;
+            updateDisplay();
+        }
+    }
+
+    updateDisplay();
+</script>
+</body>
+</html>
