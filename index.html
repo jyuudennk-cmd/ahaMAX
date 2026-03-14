@@ -61,7 +61,7 @@
 
 <header>
     <h1>ahamo→MAXのりかえ割 マスター</h1>
-    <div class="update-info">厳選・実務直結版</div>
+    <div class="update-info">お客様目線の提案ツール</div>
 </header>
 <div class="progress-container"><div id="progress-bar"></div></div>
 <div class="stat-area" id="stat-text">Ready...</div>
@@ -100,7 +100,7 @@
         { cat: "注意点", q: "「1年後に割引が終わったら、またahamoに戻していいの？」と聞かれたら？", a: "「はい、<strong>違約金等なしでいつでもahamoに戻せます。</strong>まずは1年間、無制限の快適さを体験してください」と案内します。" }
     ];
 
-    const STORAGE_KEY = 'ahamoToMax_10q_v2';
+    const STORAGE_KEY = 'ahamoToMax_10q_v3';
 
     let learnedIndexes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     let currentIndex = 0;
@@ -115,7 +115,7 @@
         if (remaining.length === 0) {
             document.getElementById('cat-display').textContent = "MASTER";
             document.getElementById('q-display').innerHTML = "アップセルの極意を<br>完全習得しました！";
-            document.getElementById('a-display').innerHTML = "2,750円引の強力なキャンペーンを武器に、<br>MAXの獲得件数を量産してください！<br>（※1年後の料金戻りの説明はお忘れなく）";
+            document.getElementById('a-display').innerHTML = "2,750円引の強力なキャンペーンを活かし、<br><strong>お客様へのフィットコンサル</strong>を実現してください！<br>（※1年後の料金戻りの説明はお忘れなく）";
             document.getElementById('card').classList.remove('is-flipped');
             return;
         }
